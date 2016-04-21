@@ -8,7 +8,8 @@ fn main() {
 		println!("gtk failed to initialize");
 	};
 
-	let window = OverseerWindow::new();
+	let mut window = OverseerWindow::new();
+	window.init();
 
 	gtk::main();
 }
