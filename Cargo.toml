@@ -1,0 +1,14 @@
+[package]
+name = "overseer_voxel"
+version = "0.1.0"
+authors = ["Aceeri <conmcclusk@gmail.com>"]
+
+[dependencies.gtk]
+version = "0.0.7"
+features = ["v3_16"]
+
+[dependencies]
+gobject-sys = "0.3.0"
+glium = "0.14.0"
+epoxy = "0.0.2"
+shared_library = "0.1.4"
