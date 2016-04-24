@@ -5,13 +5,18 @@ extern crate gfx_device_gl;
 extern crate glutin;
 extern crate cgmath;
 extern crate num_traits;
+extern crate time;
 
 use gfx::traits::{Factory, FactoryExt};
 use gfx::Device;
 
 use num_traits::float::Float;
-use cgmath::prelude::Angle;
+use cgmath::prelude::{Angle, InnerSpace};
 use cgmath::{Point3, Vector3, Vector4, Transform, AffineMatrix3, Matrix4, Deg};
+
+use time::{Duration, PreciseTime};
+
+use std::collections::HashMap;
 
 pub type ColorFormat = gfx::format::Rgba8;
 pub type DepthFormat = gfx::format::DepthStencil;
@@ -94,9 +99,12 @@ fn main() {
 	let builder = glutin::WindowBuilder::new()
 		.with_title("Cube with glutin example".to_string())
 		.with_dimensions(1024, 768)
+		.with_min_dimensions(800, 600)
 		.with_vsync();
-	let (window, mut device, mut factory, main_color, main_depth) = gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
+	let (mut window, mut device, mut factory, main_color, main_depth) = gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
 	let mut encoder: gfx::Encoder<_, _> = factory.create_command_buffer().into();
+
+	window.set_cursor_state(glutin::CursorState::Grab);
 
 	let (vertex_buffer, slice) = factory.create_vertex_buffer_indexed(&vertex_data, index_data);
 
@@ -111,7 +119,9 @@ fn main() {
 
 	let pso = factory.create_pipeline_simple(vs, fs, gfx::state::CullFace::Back, pipe::new()).unwrap();
 
-	let mut rotation = Vector3::new(0.0, 0.0, 0.0);
+	//let mut rotation = Vector3::new(0.0, 0.0, 0.0);
+	let mut pitch = 0.0;
+	let mut yaw = 0.0;
 	let mut view: AffineMatrix3<f32> = Transform::look_at(
 		Point3::new(5.0, 5.0, 5.0),
 		Point3::new(0f32, 0.0, 0.0),
@@ -120,7 +130,7 @@ fn main() {
 
 	let (width, height) = window.get_inner_size().unwrap();
 	let aspect = (width as f32 * window.hidpi_factor()) / (height as f32 * window.hidpi_factor());
-	let proj = cgmath::perspective(cgmath::deg(45.0f32), aspect, 1.0, 10.0);
+	let proj = cgmath::perspective(cgmath::deg(45.0f32), aspect, 0.1, 100.0);
 
 	let mut data = pipe::Data {
 		vbuf: vertex_buffer,
@@ -131,70 +141,109 @@ fn main() {
 		out_depth: main_depth,
 	};
 
+	let mut locked = (0, 0);
 	let mut prev_mouse: Option<(i32, i32)> = None;
 	let mut position = Vector3::new(0.0, 0.0, -5.0);
 
-	'main: loop {
-		let mut direction = Vector4::new(0.0, 0.0, 0.0, 0.0);
-		
-		let (x_s, x_c) = rotation.x.sin_cos();
-		let (y_s, y_c) = rotation.y.sin_cos();
-		let (z_s, z_c) = rotation.z.sin_cos();
+	let mut keys: [bool; 255] = [false; 255];
 
-		let rotation_mat = Matrix4::new(
-			y_c*z_c, x_c*z_s + x_s*y_s*z_c, x_s*z_s - x_c*y_s*z_c, 0.0,
-			-y_c*z_s, x_c*z_c - x_s*y_s*z_s, x_s*z_c + x_c*y_s*z_s, 0.0,
-			y_s, -x_s*y_c, x_c*y_c, 0.0,
-			0.0, 0.0, 0.0, 1.0,
-		);
+	let mut dt32 = 0.0f32;
+	let mut dt64 = 0.0f64;
+	let mut now = PreciseTime::now();
+
+	'main: loop {
+		use glutin::{Event, ElementState, VirtualKeyCode};
+
+		let temp = PreciseTime::now();
+		let delta = now.to(temp).num_nanoseconds();
+
+		if let Some(dt) = delta {
+			dt32 = (dt as f32 / 1_000_000_000f32);
+			dt64 = (dt as f64 / 1_000_000_000f64);
+		} else {
+			dt32 = 0.0;
+			dt64 = 0.0;
+		}
+		
+		now = temp;
 
 		// loop over events
 		for event in window.poll_events() {
-			use glutin::{Event, ElementState, VirtualKeyCode};
-
 			match event {
-				Event::KeyboardInput(_, _, Some(glutin::VirtualKeyCode::Escape)) |
+				Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) |
 				Event::Closed => break 'main,
 
 				Event::MouseMoved((x, y)) => {
 					if let Some(prev) = prev_mouse {
 						let dx = prev.0 - x;
 						let dy = prev.1 - y;
-						rotation -= Vector3::new(dy as f32 / 100.0, dx as f32 / 100.0, 0.0);
+						yaw += dx as f32 / 200.0;
+						pitch += dy as f32 / 200.0;
+
+						// clamps y axis rotation to 85 degrees
+						if pitch > 1.48 {
+							pitch = 1.48;
+						} else if pitch < -1.48 {
+							pitch = -1.48;
+						}
+					} else {
+						locked = (x, y);
 					}
 					prev_mouse = Some((x, y));
+					//window.set_cursor_position(locked.0, locked.1);
 				},
-				Event::KeyboardInput(ElementState::Pressed, _, Some(key)) => {
-					match key {
-						VirtualKeyCode::D => {
-							let rotated = rotation_mat * Vector4::new(1.0, 0.0, 0.0, 0.0);
-							direction += Vector4::new(rotated.x, 0.0, rotated.z, 0.0);
-						},
-						VirtualKeyCode::A => {
-							let rotated = rotation_mat * Vector4::new(1.0, 0.0, 0.0, 0.0);
-							direction -= Vector4::new(rotated.x, 0.0, rotated.z, 0.0);
-						},
-						VirtualKeyCode::W => direction += rotation_mat * Vector4::new(0.0, 0.0, 1.0, 0.0),
-						VirtualKeyCode::S => direction -= rotation_mat * Vector4::new(0.0, 0.0, 1.0, 0.0),
-						_ => { },
+
+				Event::KeyboardInput(state, code, _) => {
+					//println!("{:?}", code);
+					if state == ElementState::Pressed {
+						keys[code as usize] = true;
+					} else {
+						keys[code as usize] = false;
 					}
-				}
+				},
 				_ => {},
 			}
 		}
 
-		let rot_view = Vector3::new(direction.x, direction.y, direction.z);
+		let (sin_pitch, cos_pitch) = pitch.sin_cos();
+		let (sin_yaw, cos_yaw) = yaw.sin_cos();
 
-		position -= Vector3::new(rot_view.x, rot_view.y, -rot_view.z);
+		let x_axis = Vector3::new(cos_yaw, 0.0, -sin_yaw);
+		let y_axis = Vector3::new(sin_yaw * sin_pitch, cos_pitch, cos_yaw * sin_pitch);
+		let z_axis = Vector3::new(sin_yaw * cos_pitch, -sin_pitch, cos_pitch * cos_yaw);
 
-		let translation = Matrix4::new(
-			1.0, 0.0, 0.0, 0.0,
-			0.0, 1.0, 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0,
-			position.x,  position.y,  position.z, 1.0,
+		if keys[17] { // W
+			position -= z_axis * dt32;
+		}
+
+		if keys[31] { // S
+			position += z_axis * dt32;
+		}
+
+		if keys[30] { // A 
+			position -= x_axis * dt32;
+		}
+
+		if keys[32] { // D
+			position += x_axis * dt32;
+		}
+
+		if keys[57] { // Space
+			position += y_axis * dt32;
+		}
+
+		if keys[29] { // Left Control
+			position -= y_axis * dt32;
+		}
+
+		let view = Matrix4::new(
+			x_axis.x, y_axis.x, z_axis.x, 0.0,
+			x_axis.y, y_axis.y, z_axis.y, 0.0,
+			x_axis.z, y_axis.z, z_axis.z, 0.0,
+			-x_axis.dot(position), -y_axis.dot(position), -z_axis.dot(position), 1.0,
 		);
 
-		data.transform = (proj * rotation_mat * translation).into();
+		data.transform = (proj * view).into();
 
 		// draw a frame
 		encoder.clear(&data.out_color, [0.1, 0.2, 0.3, 1.0]);
