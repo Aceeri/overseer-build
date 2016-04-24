@@ -8,7 +8,7 @@ extern crate num_traits;
 extern crate time;
 
 use gfx::traits::{Factory, FactoryExt};
-use gfx::Device;
+use gfx::{Resources, CommandBuffer, Device};
 
 use num_traits::float::Float;
 use cgmath::prelude::{Angle, InnerSpace};
@@ -23,8 +23,7 @@ pub type DepthFormat = gfx::format::DepthStencil;
 
 pub mod camera;
 
-
-
+use camera::Camera;
 
 gfx_vertex_struct!( Vertex {
 	pos: [i8; 4] = "a_Pos",
@@ -50,7 +49,121 @@ gfx_pipeline!( pipe {
 });
 
 pub struct Overseer {
-	window: glutin::Window,
-	//data: pipe::Data,
-	camera: self::camera::Camera,
+	pub window: glutin::Window,
+	pub device: gfx_device_gl::Device,
+	pub factory: gfx_device_gl::Factory,
+	pub encoder: gfx::Encoder<gfx_device_gl::Resources, gfx_device_gl::CommandBuffer>,
+	pub bundle: pipe::Bundle<gfx_device_gl::Resources>,
+	pub camera: self::camera::Camera,
+}
+
+impl Overseer {
+	pub fn new() -> Self {
+		let vs = include_bytes!("../shader/voxel.glslv");
+		let fs = include_bytes!("../shader/voxel.glslf");
+
+		// cube vertex data
+		let vertex_data = [
+			// top (0, 0, 1)
+			Vertex::new([-1, -1,  1], [0, 0]),
+			Vertex::new([ 1, -1,  1], [1, 0]),
+			Vertex::new([ 1,  1,  1], [1, 1]),
+			Vertex::new([-1,  1,  1], [0, 1]),
+			// bottom (0, 0, -1)
+			Vertex::new([-1,  1, -1], [1, 0]),
+			Vertex::new([ 1,  1, -1], [0, 0]),
+			Vertex::new([ 1, -1, -1], [0, 1]),
+			Vertex::new([-1, -1, -1], [1, 1]),
+			// right (1, 0, 0)
+			Vertex::new([ 1, -1, -1], [0, 0]),
+			Vertex::new([ 1,  1, -1], [1, 0]),
+			Vertex::new([ 1,  1,  1], [1, 1]),
+			Vertex::new([ 1, -1,  1], [0, 1]),
+			// left (-1, 0, 0)
+			Vertex::new([-1, -1,  1], [1, 0]),
+			Vertex::new([-1,  1,  1], [0, 0]),
+			Vertex::new([-1,  1, -1], [0, 1]),
+			Vertex::new([-1, -1, -1], [1, 1]),
+			// front (0, 1, 0)
+			Vertex::new([ 1,  1, -1], [1, 0]),
+			Vertex::new([-1,  1, -1], [0, 0]),
+			Vertex::new([-1,  1,  1], [0, 1]),
+			Vertex::new([ 1,  1,  1], [1, 1]),
+			// back (0, -1, 0)
+			Vertex::new([ 1, -1,  1], [0, 0]),
+			Vertex::new([-1, -1,  1], [1, 0]),
+			Vertex::new([-1, -1, -1], [1, 1]),
+			Vertex::new([ 1, -1, -1], [0, 1]),
+		];
+
+		let index_data: &[u16] = &[
+			 0,  1,  2,  2,  3,  0, // top
+			 4,  5,  6,  6,  7,  4, // bottom
+			 8,  9, 10, 10, 11,  8, // right
+			12, 13, 14, 14, 15, 12, // left
+			16, 17, 18, 18, 19, 16, // front
+			20, 21, 22, 22, 23, 20, // back
+		];
+
+		let builder = glutin::WindowBuilder::new()
+			.with_title("Cube with glutin example".to_string())
+			.with_dimensions(1024, 768)
+			.with_min_dimensions(800, 600)
+			.with_vsync();
+		let (mut window, mut device, mut factory, main_color, main_depth) = gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
+		let mut encoder: gfx::Encoder<_, _> = factory.create_command_buffer().into();
+
+		window.set_cursor_state(glutin::CursorState::Grab);
+
+		let camera = Camera::new(&window);
+
+		let (vertex_buffer, slice) = factory.create_vertex_buffer_indexed(&vertex_data, index_data);
+
+		let texels = [[0x20, 0xA0, 0xC0, 0x00]];
+		let (_, texture_view) = factory.create_texture_const::<gfx::format::Rgba8>(
+			gfx::tex::Kind::D2(1, 1, gfx::tex::AaMode::Single), &[&texels]
+			).unwrap();
+
+		let sinfo = gfx::tex::SamplerInfo::new(gfx::tex::FilterMethod::Bilinear, gfx::tex::WrapMode::Clamp);
+
+		let pso = factory.create_pipeline_simple(vs, fs, gfx::state::CullFace::Back, pipe::new()).unwrap();
+
+		let data = pipe::Data {
+			vbuf: vertex_buffer,
+			transform: (camera.perspective * camera.view).into(),
+			color: (texture_view, factory.create_sampler(sinfo)),
+			out_color: main_color,
+			out_depth: main_depth,
+		};
+
+		let bundle = pipe::Bundle {
+			slice: slice,
+			pso: pso, 
+			data: data,
+		};
+
+		Overseer {
+			window: window,
+			device: device,
+			factory: factory,
+			encoder: encoder,
+			bundle: bundle,
+			camera: camera,
+		}
+	}
+
+	pub fn update(&mut self) {
+		self.camera.update(&self.window);
+
+		self.bundle.data.transform = (self.camera.perspective * self.camera.view).into();
+	}
+
+	pub fn render(&mut self) {
+		self.encoder.clear(&self.bundle.data.out_color, [0.1, 0.2, 0.3, 1.0]);
+		self.encoder.clear_depth(&self.bundle.data.out_depth, 1.0);
+		self.encoder.draw(&self.bundle.slice, &self.bundle.pso, &self.bundle.data);
+		self.encoder.flush(&mut self.device);
+		self.window.swap_buffers().unwrap();
+		self.device.cleanup();
+	}
 }

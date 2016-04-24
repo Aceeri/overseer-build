@@ -1,18 +1,33 @@
+use super::cgmath;
 use cgmath::prelude::{InnerSpace, SquareMatrix};
 use cgmath::{Vector3, Matrix4};
 
+#[derive(Debug)]
 pub struct Camera {
-	view: Matrix4<f32>,
-	position: Vector3<f32>,
-	pitch: f32,
-	yaw: f32,
+	pub view: Matrix4<f32>,
+	pub perspective: Matrix4<f32>,
+	pub fov: f32,
+	pub near: f32,
+	pub far: f32,
+	pub position: Vector3<f32>,
+	pub pitch: f32,
+	pub yaw: f32,
 }
 
 impl Camera {
-	pub fn new() -> Camera {
+	pub fn new(window: &super::glutin::Window) -> Camera {
+		let (fov, near, far) = (45.0f32, 0.1f32, 100f32);
+
+		let (width, height) = window.get_inner_size().unwrap();
+		let aspect = (width as f32 * window.hidpi_factor()) / (height as f32 * window.hidpi_factor());
+
 		Camera {
 			view: Matrix4::identity(),
-			position: Vector3::new(0.0, 0.0, 0.0),
+			perspective: cgmath::perspective(cgmath::deg(fov), aspect, near, far),
+			fov: fov,
+			near: near,
+			far: far,
+			position: Vector3::new(0.0, 0.0, -5.0),
 			pitch: 0.0f32,
 			yaw: 0.0f32,
 		}
@@ -29,7 +44,7 @@ impl Camera {
 		(x_axis, y_axis, z_axis)
 	}
 
-	pub fn update(&mut self) {
+	pub fn update(&mut self, window: &super::glutin::Window) {
 		let axis = self.axis();
 
 		let x_axis = axis.0;
@@ -42,5 +57,10 @@ impl Camera {
 			x_axis.z, y_axis.z, z_axis.z, 0.0,
 			-x_axis.dot(self.position), -y_axis.dot(self.position), -z_axis.dot(self.position), 1.0,
 		);
+
+		let (width, height) = window.get_inner_size().unwrap();
+		let aspect = (width as f32 * window.hidpi_factor()) / (height as f32 * window.hidpi_factor());
+
+		self.perspective = cgmath::perspective(cgmath::deg(self.fov), aspect, self.near, self.far);
 	}
 }
