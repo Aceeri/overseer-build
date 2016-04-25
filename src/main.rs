@@ -62,6 +62,7 @@ fn main() {
 					if let Some(prev) = prev_mouse {
 						let dx = prev.0 - x;
 						let dy = prev.1 - y;
+
 						camera.yaw += dx as f32 / 200.0;
 						camera.pitch += dy as f32 / 200.0;
 
@@ -71,11 +72,8 @@ fn main() {
 						} else if camera.pitch < -1.48 {
 							camera.pitch = -1.48;
 						}
-					} else {
-						locked = (x, y);
 					}
 					prev_mouse = Some((x, y));
-					//window.set_cursor_position(locked.0, locked.1);
 				},
 
 				Event::KeyboardInput(state, code, _) => {
@@ -114,5 +112,12 @@ fn main() {
 		if keys[29] { // Left Control
 			camera.position -= axis.1 * dt32;
 		}
+
+    if let Some((x, y)) = overseer.window.get_position() {
+      if let Some((width, height)) = overseer.window.get_inner_size() {
+        overseer.window.set_cursor_position(width as i32 / 2, height as i32 / 2);
+        prev_mouse = Some((width as i32 / 2, height as i32 / 2));
+      }
+    }
 	}
 }
