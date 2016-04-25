@@ -79,7 +79,6 @@ fn main() {
 				},
 
 				Event::KeyboardInput(state, code, _) => {
-					//println!("{:?}", code);
 					if state == ElementState::Pressed {
 						keys[code as usize] = true;
 					} else {
