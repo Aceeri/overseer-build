@@ -100,7 +100,7 @@ impl Overseer {
 			20, 21, 22, 22, 23, 20, // back
 		];
 
-		let (width, height) = (1024, 768);
+		let (width, height) = (1600, 900);
 
 		let builder = glutin::WindowBuilder::new()
 			.with_title("Cube with glutin example".to_string())

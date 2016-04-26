@@ -40,17 +40,6 @@ impl Camera {
 		let (sin_yaw, cos_yaw) = self.yaw.sin_cos();
 		let (sin_roll, cos_roll) = self.roll.sin_cos();
 
-		//let x_axis = Vector3::new(cos_yaw, 0.0, -sin_yaw);
-		//let y_axis = Vector3::new(sin_yaw * sin_pitch, cos_pitch, cos_yaw * sin_pitch);
-		//let z_axis = Vector3::new(sin_yaw * cos_pitch, -sin_pitch, cos_pitch * cos_yaw);
-		/*let x_axis = Vector3::new(cos_yaw, 0.0, -sin_yaw);
-		let y_axis = Vector3::new(0.0, 1.0, 0.0);
-		let z_axis = Vector3::new(sin_yaw, 0.0, cos_yaw);
-
-		let x_axis = Vector3::new(1.0, 0.0, 0.0);
-		let y_axis = Vector3::new(0.0, cos_pitch, sin_pitch);
-		let z_axis = Vector3::new(0.0, -sin_pitch, cos_pitch);*/
-
 		let x_axis = Vector3::new(cos_roll * cos_yaw, sin_roll * cos_yaw, -sin_yaw);
 		let y_axis = Vector3::new(-sin_roll * cos_pitch + sin_pitch * cos_roll * sin_yaw, cos_pitch * cos_roll + sin_roll * sin_pitch * sin_yaw, sin_pitch * cos_yaw);
 		let z_axis = Vector3::new(sin_roll * sin_pitch + cos_pitch * cos_roll * sin_yaw, -sin_pitch * cos_roll + sin_roll * cos_pitch * sin_yaw, cos_pitch * cos_yaw);
