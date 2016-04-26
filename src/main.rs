@@ -13,8 +13,14 @@ use overseer_voxel::{Overseer};
 use time::PreciseTime;
 
 use std::collections::VecDeque;
+use std::path::PathBuf;
 
 fn main() {
+	let mut world = overseer_voxel::world::World::new();
+	world.load_wrld(PathBuf::from("world/test.wrld"));
+	//let chunk = overseer_voxel::world::chunk::Chunk::new([0, 0, 0]);
+	//println!("{:?}", chunk);
+
 	let mut overseer = Overseer::new();
 
 	let mut keys: [bool; 255] = [false; 255];
@@ -26,6 +32,8 @@ fn main() {
 	let mut count = 0.0f64;
 
 	let mut average = VecDeque::new();
+
+	let mut focused = true;
 
 	'main: loop {
 		use glutin::{Event, ElementState, VirtualKeyCode};
@@ -62,8 +70,6 @@ fn main() {
 			count = 0.0f64;
 		}
 		
-		
-
 		overseer.update();
 		overseer.render();
 
@@ -76,24 +82,44 @@ fn main() {
 				Event::Closed => break 'main,
 
 				Event::MouseMoved((x, y)) => {
-					if let Some((width, height)) = overseer.window.get_inner_size() {
-						let dx = width as i32 / 2 - x;
-						let dy = height as i32 / 2 - y;
+					if focused {
+						if let Some((width, height)) = overseer.window.get_inner_size() {
+							let dx = width as i32 / 2 - x;
+							let dy = height as i32 / 2 - y;
 
-						camera.yaw += dx as f32 / 200.0;
-						camera.pitch += dy as f32 / 200.0;
+							camera.yaw += dx as f32 / 200.0;
+							camera.pitch += dy as f32 / 200.0;
 
-						// clamps y axis rotation to 85 degrees
-						if camera.pitch > 1.48 {
-							camera.pitch = 1.48;
-						} else if camera.pitch < -1.48 {
-							camera.pitch = -1.48;
-						}
+							// clamps y axis rotation to 85 degrees
+							if camera.pitch > 1.48 {
+								camera.pitch = 1.48;
+							} else if camera.pitch < -1.48 {
+								camera.pitch = -1.48;
+							}
 
-						if let Err(e) = overseer.window.set_cursor_position(width as i32 / 2, height as i32 / 2) {
-							println!("SET CURSOR ERROR {:?}", e);
+							if let Err(e) = overseer.window.set_cursor_position(width as i32 / 2, height as i32 / 2) {
+								println!("SET CURSOR ERROR {:?}", e);
+							}
 						}
 					}
+				},
+
+				Event::Focused(focus) => {
+					if focus {
+						overseer.window.set_cursor_state(glutin::CursorState::Grab).unwrap();
+
+						if let Some((width, height)) = overseer.window.get_inner_size() {
+							if let Err(e) = overseer.window.set_cursor_position(width as i32 / 2, height as i32 / 2) {
+								println!("SET CURSOR ERROR {:?}", e);
+							}
+						}
+					} else {
+						overseer.window.set_cursor_state(glutin::CursorState::Normal).unwrap();
+					}
+
+					focused = focus;
+
+					println!("{:?}", focus);
 				},
 
 				Event::KeyboardInput(state, code, _) => {

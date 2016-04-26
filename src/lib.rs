@@ -3,9 +3,11 @@ extern crate gfx;
 extern crate gfx_window_glutin;
 extern crate gfx_device_gl;
 extern crate glutin;
+
 extern crate cgmath;
 extern crate num_traits;
 extern crate time;
+extern crate regex;
 
 use gfx::traits::{Factory, FactoryExt};
 use gfx::Device;
