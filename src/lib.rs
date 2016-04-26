@@ -8,19 +8,12 @@ extern crate num_traits;
 extern crate time;
 
 use gfx::traits::{Factory, FactoryExt};
-use gfx::{Resources, CommandBuffer, Device};
-
-use num_traits::float::Float;
-use cgmath::prelude::{Angle, InnerSpace};
-use cgmath::{Point3, Vector3, Vector4, Transform, AffineMatrix3, Matrix4, Deg};
-
-use time::{Duration, PreciseTime};
-
-use std::collections::HashMap;
+use gfx::Device;
 
 pub type ColorFormat = gfx::format::Rgba8;
 pub type DepthFormat = gfx::format::DepthStencil;
 
+pub mod world;
 pub mod camera;
 
 use camera::Camera;
@@ -105,15 +98,18 @@ impl Overseer {
 			20, 21, 22, 22, 23, 20, // back
 		];
 
+		let (width, height) = (1024, 768);
+
 		let builder = glutin::WindowBuilder::new()
 			.with_title("Cube with glutin example".to_string())
-			.with_dimensions(1024, 768)
+			.with_dimensions(width, height)
 			.with_min_dimensions(800, 600)
 			.with_vsync();
-		let (mut window, mut device, mut factory, main_color, main_depth) = gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
-		let mut encoder: gfx::Encoder<_, _> = factory.create_command_buffer().into();
+		let (window, device, mut factory, main_color, main_depth) = gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
+		let encoder: gfx::Encoder<_, _> = factory.create_command_buffer().into();
 
-		window.set_cursor_state(glutin::CursorState::Grab);
+		window.set_cursor_state(glutin::CursorState::Grab).unwrap();
+		window.set_cursor_position(width as i32 / 2, height as i32 / 2).unwrap();
 
 		let camera = Camera::new(&window);
 
@@ -161,7 +157,7 @@ impl Overseer {
 	pub fn render(&mut self) {
 		self.encoder.clear(&self.bundle.data.out_color, [0.1, 0.2, 0.3, 1.0]);
 		self.encoder.clear_depth(&self.bundle.data.out_depth, 1.0);
-		self.encoder.draw(&self.bundle.slice, &self.bundle.pso, &self.bundle.data);
+		self.bundle.encode(&mut self.encoder);
 		self.encoder.flush(&mut self.device);
 		self.window.swap_buffers().unwrap();
 		self.device.cleanup();

@@ -10,20 +10,12 @@ extern crate overseer_voxel;
 
 use overseer_voxel::{Overseer};
 
-use gfx::traits::{Factory, FactoryExt};
-use gfx::Device;
+use time::PreciseTime;
 
-use num_traits::float::Float;
-use cgmath::prelude::{Angle, InnerSpace};
-use cgmath::{Point3, Vector3, Vector4, Transform, AffineMatrix3, Matrix4, Deg};
-
-use time::{Duration, PreciseTime};
+use std::collections::VecDeque;
 
 fn main() {
 	let mut overseer = Overseer::new();
-
-	let mut locked = (0, 0);
-	let mut prev_mouse: Option<(i32, i32)> = None;
 
 	let mut keys: [bool; 255] = [false; 255];
 
@@ -31,21 +23,46 @@ fn main() {
 	let mut dt64 = 0.0f64;
 	let mut now = PreciseTime::now();
 
+	let mut count = 0.0f64;
+
+	let mut average = VecDeque::new();
+
 	'main: loop {
 		use glutin::{Event, ElementState, VirtualKeyCode};
 
 		let temp = PreciseTime::now();
-		let delta = now.to(temp).num_nanoseconds();
+		let delta = now.to(temp).num_microseconds();
 
 		if let Some(dt) = delta {
-			dt32 = (dt as f32 / 1_000_000_000f32);
-			dt64 = (dt as f64 / 1_000_000_000f64);
+			dt32 = dt as f32 / 1_000_000f32;
+			dt64 = dt as f64 / 1_000_000f64;
 		} else {
 			dt32 = 0.0;
 			dt64 = 0.0;
 		}
-		
+
 		now = temp;
+
+		average.push_back(1.0 / dt64);
+
+		if average.len() > 30 {
+			average.pop_front();
+		}
+
+		count += dt64;
+
+		if count > 1.0f64 {
+			let mut av = 0.0;
+			for point in &average {
+				av += point.clone();
+			}
+			av /= average.len() as f64;
+
+			println!("fps: {:?}", av as u32);
+			count = 0.0f64;
+		}
+		
+		
 
 		overseer.update();
 		overseer.render();
@@ -59,9 +76,9 @@ fn main() {
 				Event::Closed => break 'main,
 
 				Event::MouseMoved((x, y)) => {
-					if let Some(prev) = prev_mouse {
-						let dx = prev.0 - x;
-						let dy = prev.1 - y;
+					if let Some((width, height)) = overseer.window.get_inner_size() {
+						let dx = width as i32 / 2 - x;
+						let dy = height as i32 / 2 - y;
 
 						camera.yaw += dx as f32 / 200.0;
 						camera.pitch += dy as f32 / 200.0;
@@ -72,8 +89,11 @@ fn main() {
 						} else if camera.pitch < -1.48 {
 							camera.pitch = -1.48;
 						}
+
+						if let Err(e) = overseer.window.set_cursor_position(width as i32 / 2, height as i32 / 2) {
+							println!("SET CURSOR ERROR {:?}", e);
+						}
 					}
-					prev_mouse = Some((x, y));
 				},
 
 				Event::KeyboardInput(state, code, _) => {
@@ -112,12 +132,5 @@ fn main() {
 		if keys[29] { // Left Control
 			camera.position -= axis.1 * dt32;
 		}
-
-    if let Some((x, y)) = overseer.window.get_position() {
-      if let Some((width, height)) = overseer.window.get_inner_size() {
-        overseer.window.set_cursor_position(width as i32 / 2, height as i32 / 2);
-        prev_mouse = Some((width as i32 / 2, height as i32 / 2));
-      }
-    }
 	}
 }
