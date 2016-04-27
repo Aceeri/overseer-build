@@ -39,7 +39,27 @@ impl World {
   }
 
   pub fn load_wdfn(&mut self, path: PathBuf) {
-    self.wdfn_file = path;
+    let definition_regex = Regex::new(r#"\"(.+)\"\s+?(.)\((.+)\);"#).unwrap();
+
+    match File::open(&path) {
+      Ok(mut file) => {
+        let mut buffer = "".to_owned();
+        file.read_to_string(&mut buffer).unwrap();
+
+        for captures in definition_regex.captures_iter(&buffer) {
+          let name = captured.at(1).unwrap();
+          let attr_type = captured.at(2).unwrap();
+          let attr = captured.at(3).unwrap();
+
+          
+        }
+
+        self.wdfn_file = path;
+      },
+      Err(e) => {
+        println!("{:?}", e);
+      }
+    }
   }
 
   pub fn load_wrld(&mut self, path: PathBuf) {

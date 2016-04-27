@@ -171,6 +171,7 @@ impl Chunk {
 
 		let mut content = "".to_owned();
 
+		let mut first = true;
 		let mut last = "".to_owned();
 		let mut times = 1;
 		for (i, y) in self.data.iter().enumerate() {
@@ -183,6 +184,10 @@ impl Chunk {
 					} else {
 						if times > 1 {
 							content = content + r"*" + &times.to_string() + r",";
+						} else if !first {
+							content = content + r",";
+						} else {
+							first = false;
 						}
 
 						times = 1;
@@ -211,9 +216,15 @@ impl Chunk {
 				for (z_pos, z) in x.iter().enumerate() {
 
 					if z.id != 0 {
+						let mut color = match z.id {
+							1 => [0.02, 0.55, 0.0, 1.0],
+							2 => [0.43, 0.35, 0.286, 1.0],
+							3 => [0.11, 0.385, 0.102, 1.0],
+							_ => [0.00, 0.00, 0.00, 0.00],
+						};
 						list.push(InstancedVoxel {
 							position: [self.position[0] + x_pos as i32, self.position[1] + y_pos as i32, self.position[2] + z_pos as i32, 1],
-							color: [0.0, 1.0, 0.0, 1.0],
+							color: color,
 						});
 					}
 				}
