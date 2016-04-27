@@ -18,6 +18,7 @@ use std::path::PathBuf;
 fn main() {
 	let mut world = overseer_voxel::world::World::new();
 	world.load_wrld(PathBuf::from("world/test.wrld"));
+	world.load_chunk([0, 0, 0]);
 	//let chunk = overseer_voxel::world::chunk::Chunk::new([0, 0, 0]);
 	//println!("{:?}", chunk);
 

@@ -22,7 +22,7 @@ pub struct World {
   wrld_file: PathBuf,
 
   definitions: Vec<Definition>,
-  map: HashMap<[i64; 3], i64>, // location in file
+  map: HashMap<[i64; 3], u64>, // location in file
   chunks: Vec<Chunk>, // current chunks loaded
 }
 
@@ -45,6 +45,7 @@ impl World {
   pub fn load_wrld(&mut self, path: PathBuf) {
     let region_regex = Regex::new(r"\^\((\d+),(\d+),(\d+)\):").unwrap(); // matches ^(0,0,0):
 
+    // load locations of chunks
     match File::open(&path) {
       Ok(mut file) => {
         let mut buffer = "".to_owned();
@@ -55,7 +56,7 @@ impl World {
           let y = captured.at(2).unwrap().parse::<i64>().unwrap();
           let z = captured.at(3).unwrap().parse::<i64>().unwrap();
 
-          self.map.insert([x, y, z], position.1 as i64);
+          self.map.insert([x, y, z], position.1 as u64);
         }
 
         self.wrld_file = path;
@@ -64,5 +65,28 @@ impl World {
         println!("{:?}", e);
       }
     }
+  }
+
+  // load chunks that are distance outwards from position
+  pub fn load_radius(position: [i64; 3], distance: i64) {
+
+  }
+
+  pub fn load_chunk(&mut self, position: [i64; 3]) {
+    if let Some(location) = self.map.get(&position) {
+      println!("Chunk found at {:?}", location);
+
+      let chunk = Chunk::from(&self.wrld_file, position, location.clone()).unwrap();
+
+      chunk.write();
+
+      //println!("Chunk: {:?}", chunk);
+    } else {
+      println!("No chunk found at location: {:?}", position);
+    }
+  }
+
+  fn unload_chunk(&mut self, index: usize) {
+    self.chunks.remove(index);
   }
 }
