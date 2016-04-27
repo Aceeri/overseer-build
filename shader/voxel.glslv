@@ -1,12 +1,14 @@
 #version 150 core
 
+in vec4 voxel_Color;
+in ivec4 voxel_Transform;
 in ivec4 a_Pos;
-in ivec2 a_TexCoord;
-out vec2 v_TexCoord;
+out vec4 v_Color;
 
 uniform mat4 u_Transform;
 
 void main() {
-    v_TexCoord = a_TexCoord;
-    gl_Position = u_Transform * a_Pos;
+  gl_Position = u_Transform * (a_Pos + 2 * voxel_Transform);
+
+  v_Color = voxel_Color;
 }

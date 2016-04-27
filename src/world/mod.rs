@@ -21,9 +21,9 @@ pub struct World {
   wdfn_file: PathBuf,
   wrld_file: PathBuf,
 
-  definitions: Vec<Definition>,
-  map: HashMap<[i64; 3], u64>, // location in file
-  chunks: Vec<Chunk>, // current chunks loaded
+  pub definitions: Vec<Definition>,
+  pub map: HashMap<[i32; 3], u64>, // location in file
+  pub chunks: Vec<Chunk>, // current chunks loaded
 }
 
 impl World {
@@ -52,9 +52,9 @@ impl World {
         file.read_to_string(&mut buffer).unwrap();
 
         for (position, captured) in region_regex.find_iter(&buffer).zip(region_regex.captures_iter(&buffer)) {
-          let x = captured.at(1).unwrap().parse::<i64>().unwrap();
-          let y = captured.at(2).unwrap().parse::<i64>().unwrap();
-          let z = captured.at(3).unwrap().parse::<i64>().unwrap();
+          let x = captured.at(1).unwrap().parse::<i32>().unwrap();
+          let y = captured.at(2).unwrap().parse::<i32>().unwrap();
+          let z = captured.at(3).unwrap().parse::<i32>().unwrap();
 
           self.map.insert([x, y, z], position.1 as u64);
         }
@@ -67,20 +67,14 @@ impl World {
     }
   }
 
-  // load chunks that are distance outwards from position
-  pub fn load_radius(position: [i64; 3], distance: i64) {
-
-  }
-
-  pub fn load_chunk(&mut self, position: [i64; 3]) {
+  pub fn load_chunk(&mut self, position: [i32; 3]) {
     if let Some(location) = self.map.get(&position) {
-      println!("Chunk found at {:?}", location);
+      println!("Chunk {:?} found at {:?}", position, location);
 
-      let chunk = Chunk::from(&self.wrld_file, position, location.clone()).unwrap();
-
-      chunk.write();
-
-      //println!("Chunk: {:?}", chunk);
+      match Chunk::from(&self.wrld_file, position, location.clone()) {
+        Some(chunk) => self.chunks.push(chunk),
+        None => { },
+      }
     } else {
       println!("No chunk found at location: {:?}", position);
     }

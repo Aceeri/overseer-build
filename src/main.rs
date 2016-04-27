@@ -16,12 +16,6 @@ use std::collections::VecDeque;
 use std::path::PathBuf;
 
 fn main() {
-	let mut world = overseer_voxel::world::World::new();
-	world.load_wrld(PathBuf::from("world/test.wrld"));
-	world.load_chunk([0, 0, 0]);
-	//let chunk = overseer_voxel::world::chunk::Chunk::new([0, 0, 0]);
-	//println!("{:?}", chunk);
-
 	let mut overseer = Overseer::new();
 
 	let mut keys: [bool; 255] = [false; 255];
@@ -72,7 +66,7 @@ fn main() {
 			}
 			av /= average.len() as f64;
 
-			//println!("fps: {:?}", av as u32);
+			println!("fps: {:?}", av as u32);
 			count = 0.0f64;
 		}
 		
