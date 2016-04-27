@@ -10,6 +10,7 @@ extern crate cgmath;
 extern crate num_traits;
 extern crate time;
 extern crate regex;
+extern crate rand;
 
 use std::path::PathBuf;
 
@@ -25,16 +26,15 @@ pub mod camera;
 use camera::Camera;
 
 gfx_vertex_struct!( Vertex {
-	pos: [i8; 4] = "a_Pos",
-	tex_coord: [i8; 2] = "a_TexCoord",
+	pos: [i8; 4] = "vertex_position",
+	normal: [i8; 4] = "vertex_normal",
 });
 
 gfx_pipeline!( pipe {
 	vbuf: gfx::VertexBuffer<Vertex> = (),
-	transform: gfx::Global<[[f32; 4]; 4]> = "u_Transform",
-	color: gfx::Global<[f32; 4]> = "t_Color",
+	transform: gfx::Global<[[f32; 4]; 4]> = "camera_transform",
 	voxels: gfx::InstanceBuffer<world::chunk::InstancedVoxel> = (),
-	out_color: gfx::RenderTarget<ColorFormat> = "Target0",
+	out_color: gfx::RenderTarget<ColorFormat> = "fragment",
 	out_depth: gfx::DepthTarget<DepthFormat> =
 		gfx::preset::depth::LESS_EQUAL_WRITE,
 });
@@ -52,14 +52,12 @@ pub struct Overseer {
 impl Overseer {
 	pub fn new() -> Self {
 		let mut world = world::World::new();
-		world.load_wrld(PathBuf::from("world/test.wrld"));
+		//world.chunks = world::chunk::Chunk::stress(5);
+		world.load_wrld(PathBuf::from("world/tree.wrld"));
 		world.load_chunk([0, 0, 0]);
-		println!("{:?}", world.chunks[0].write());
 
 		let vs = include_bytes!("../shader/voxel.glslv");
 		let fs = include_bytes!("../shader/voxel.glslf");
-
-		println!("{:?}", Vertex { pos: [ 1, -1,  1,  1], tex_coord: [0, 0], });
 
 		let (width, height) = (1600, 900);
 
@@ -76,18 +74,22 @@ impl Overseer {
 
 		let camera = Camera::new(&window);
 
-		let instances = world.chunks[0].instances(Vec::new());
+		let mut instances = Vec::new();
+		for chunk in world.chunks.iter() {
+			chunk.instances(&mut instances);
+		}
+
 		let voxel_buffer = factory.create_buffer_const(&instances, gfx::BufferRole::Vertex, gfx::Bind::empty()).unwrap();
 
 		let (vertex_buffer, mut slice) = factory.create_vertex_buffer_indexed(&world::chunk::VERTICES, world::chunk::INDICES);
 		slice.instances = Some((instances.len() as u32, 0));
+		println!("Voxels: {:?}", instances.len());
 
 		let pso = factory.create_pipeline_simple(vs, fs, gfx::state::CullFace::Back, pipe::new()).unwrap();
 
 		let data = pipe::Data {
 			vbuf: vertex_buffer,
 			transform: (camera.perspective * camera.view).into(),
-			color: [0.0, 0.0, 0.0, 1.0],
 			voxels: voxel_buffer,
 			out_color: main_color,
 			out_depth: main_depth,

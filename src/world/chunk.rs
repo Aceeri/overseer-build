@@ -8,35 +8,35 @@ use super::super::Vertex;
 
 pub static VERTICES: [Vertex; 24] = [
 	// top (0, 0, 1)
-	Vertex { pos: [-1, -1,  1,  1], tex_coord: [0, 0], },
-	Vertex { pos: [ 1, -1,  1,  1], tex_coord: [1, 0], },
-	Vertex { pos: [ 1,  1,  1,  1], tex_coord: [1, 1], },
-	Vertex { pos: [-1,  1,  1,  1], tex_coord: [0, 1], },
+	Vertex { pos: [-1, -1,  1,  1], normal: [0, 0, 1, 1], },
+	Vertex { pos: [ 1, -1,  1,  1], normal: [0, 0, 1, 1], },
+	Vertex { pos: [ 1,  1,  1,  1], normal: [0, 0, 1, 1], },
+	Vertex { pos: [-1,  1,  1,  1], normal: [0, 0, 1, 1], },
 	// bottom (0, 0, -1)
-	Vertex { pos: [-1,  1, -1,  1], tex_coord: [1, 0], },
-	Vertex { pos: [ 1,  1, -1,  1], tex_coord: [0, 0], },
-	Vertex { pos: [ 1, -1, -1,  1], tex_coord: [0, 1], },
-	Vertex { pos: [-1, -1, -1,  1], tex_coord: [1, 1], },
+	Vertex { pos: [-1,  1, -1,  1], normal: [0, 0, -1, 1], },
+	Vertex { pos: [ 1,  1, -1,  1], normal: [0, 0, -1, 1], },
+	Vertex { pos: [ 1, -1, -1,  1], normal: [0, 0, -1, 1], },
+	Vertex { pos: [-1, -1, -1,  1], normal: [0, 0, -1, 1], },
 	// right (1, 0, 0)
-	Vertex { pos: [ 1, -1, -1,  1], tex_coord: [0, 0], },
-	Vertex { pos: [ 1,  1, -1,  1], tex_coord: [1, 0], },
-	Vertex { pos: [ 1,  1,  1,  1], tex_coord: [1, 1], },
-	Vertex { pos: [ 1, -1,  1,  1], tex_coord: [0, 1], },
+	Vertex { pos: [ 1, -1, -1,  1], normal: [1, 0, 0, 1], },
+	Vertex { pos: [ 1,  1, -1,  1], normal: [1, 0, 0, 1], },
+	Vertex { pos: [ 1,  1,  1,  1], normal: [1, 0, 0, 1], },
+	Vertex { pos: [ 1, -1,  1,  1], normal: [1, 0, 0, 1], },
 	// left (-1, 0, 0)
-	Vertex { pos: [-1, -1,  1,  1], tex_coord: [1, 0], },
-	Vertex { pos: [-1,  1,  1,  1], tex_coord: [0, 0], },
-	Vertex { pos: [-1,  1, -1,  1], tex_coord: [0, 1], },
-	Vertex { pos: [-1, -1, -1,  1], tex_coord: [1, 1], },
+	Vertex { pos: [-1, -1,  1,  1], normal: [-1, 0, 0, 1], },
+	Vertex { pos: [-1,  1,  1,  1], normal: [-1, 0, 0, 1], },
+	Vertex { pos: [-1,  1, -1,  1], normal: [-1, 0, 0, 1], },
+	Vertex { pos: [-1, -1, -1,  1], normal: [-1, 0, 0, 1], },
 	// front (0, 1, 0)
-	Vertex { pos: [ 1,  1, -1,  1], tex_coord: [1, 0], },
-	Vertex { pos: [-1,  1, -1,  1], tex_coord: [0, 0], },
-	Vertex { pos: [-1,  1,  1,  1], tex_coord: [0, 1], },
-	Vertex { pos: [ 1,  1,  1,  1], tex_coord: [1, 1], },
+	Vertex { pos: [ 1,  1, -1,  1], normal: [0, 1, 0, 1], },
+	Vertex { pos: [-1,  1, -1,  1], normal: [0, 1, 0, 1], },
+	Vertex { pos: [-1,  1,  1,  1], normal: [0, 1, 0, 1], },
+	Vertex { pos: [ 1,  1,  1,  1], normal: [0, 1, 0, 1], },
 	// back (0, -1, 0)
-	Vertex { pos: [ 1, -1,  1,  1], tex_coord: [0, 0], },
-	Vertex { pos: [-1, -1,  1,  1], tex_coord: [1, 0], },
-	Vertex { pos: [-1, -1, -1,  1], tex_coord: [1, 1], },
-	Vertex { pos: [ 1, -1, -1,  1], tex_coord: [0, 1], },
+	Vertex { pos: [ 1, -1,  1,  1], normal: [0, -1, 0, 1], },
+	Vertex { pos: [-1, -1,  1,  1], normal: [0, -1, 0, 1], },
+	Vertex { pos: [-1, -1, -1,  1], normal: [0, -1, 0, 1], },
+	Vertex { pos: [ 1, -1, -1,  1], normal: [0, -1, 0, 1], },
 ];
 
 pub static INDICES: &'static [u16] = &[
@@ -49,8 +49,8 @@ pub static INDICES: &'static [u16] = &[
 ];
 
 gfx_vertex_struct!(InstancedVoxel {
-	position: [i32; 4] = "voxel_Transform",
-	color: [f32; 4] = "voxel_Color",
+	position: [i32; 4] = "voxel_position",
+	color: [f32; 4] = "voxel_color",
 });
 
 #[derive(Copy, Clone)]
@@ -144,7 +144,7 @@ impl Chunk {
 									}
 									Err(e) => {
 										println!("VOXEL ERROR: {:?}", e);
-										chunk.data[x][y][z] = Voxel { id: 0 };
+										chunk.data[y][x][z] = Voxel { id: 0 };
 									},
 								};
 							}
@@ -210,7 +210,26 @@ impl Chunk {
 		format!("{}{}^\r\n", header, content)
 	}
 
-	pub fn instances(&self, mut list: Vec<InstancedVoxel>) -> Vec<InstancedVoxel> {
+	pub fn stress(range: u32) -> Vec<Chunk> {
+		let mut list = Vec::new();
+
+		for x in 0..range {
+			for z in 0..range {
+				for y in 0..range {
+					list.push(
+						Chunk {
+							position: [x as i32, y as i32, z as i32],
+							data: [[[Voxel { id: 2 }; 16]; 16]; 16],
+						}
+					);
+				}
+			}
+		}
+		
+		list 
+	}
+
+	pub fn instances(&self, list: &mut Vec<InstancedVoxel>) {
 		for (y_pos, y) in self.data.iter().enumerate() {
 			for (x_pos, x) in y.iter().enumerate() {
 				for (z_pos, z) in x.iter().enumerate() {
@@ -223,14 +242,15 @@ impl Chunk {
 							_ => [0.00, 0.00, 0.00, 0.00],
 						};
 						list.push(InstancedVoxel {
-							position: [self.position[0] + x_pos as i32, self.position[1] + y_pos as i32, self.position[2] + z_pos as i32, 1],
+							position: [
+								self.position[0] * 16 + x_pos as i32, 
+								self.position[1] * 16 + y_pos as i32, 
+								self.position[2] * 16 + z_pos as i32, 1],
 							color: color,
 						});
 					}
 				}
 			}
 		}
-
-		list
 	}
 }

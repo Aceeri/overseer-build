@@ -46,12 +46,12 @@ impl World {
         let mut buffer = "".to_owned();
         file.read_to_string(&mut buffer).unwrap();
 
-        for captures in definition_regex.captures_iter(&buffer) {
-          let name = captured.at(1).unwrap();
-          let attr_type = captured.at(2).unwrap();
-          let attr = captured.at(3).unwrap();
+        for captured in definition_regex.captures_iter(&buffer) {
+          //let name = captured.at(1).unwrap();
+          //let attr_type = captured.at(2).unwrap();
+          //let attr = captured.at(3).unwrap();
 
-          
+
         }
 
         self.wdfn_file = path;
@@ -63,7 +63,7 @@ impl World {
   }
 
   pub fn load_wrld(&mut self, path: PathBuf) {
-    let region_regex = Regex::new(r"\^\((\d+),(\d+),(\d+)\):").unwrap(); // matches ^(0,0,0):
+    let region_regex = Regex::new(r"\^\((-?\d+),(-?\d+),(-?\d+)\):").unwrap(); // matches ^(0,0,0):
 
     // load locations of chunks
     match File::open(&path) {

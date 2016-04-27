@@ -1,14 +1,16 @@
 #version 150 core
 
-in vec4 voxel_Color;
-in ivec4 voxel_Transform;
-in ivec4 a_Pos;
-out vec4 v_Color;
+in vec4 voxel_color;
+in ivec4 voxel_position;
+in ivec4 vertex_position;
+in ivec4 vertex_normal;
 
-uniform mat4 u_Transform;
+out vec4 vertex_color;
+
+uniform mat4 camera_transform;
 
 void main() {
-  gl_Position = u_Transform * (a_Pos + 2 * voxel_Transform);
+  gl_Position = camera_transform * (vertex_position + 2 * voxel_position);
 
-  v_Color = voxel_Color;
+  vertex_color = voxel_color;
 }
