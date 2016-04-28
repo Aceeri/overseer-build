@@ -31,6 +31,7 @@ gfx_vertex_struct!( Vertex {
 });
 
 gfx_pipeline!( pipe {
+    time: gfx::Global<f32> = "time",
     vbuf: gfx::VertexBuffer<Vertex> = (),
     transform: gfx::Global<[[f32; 4]; 4]> = "camera_transform",
     voxels: gfx::InstanceBuffer<world::chunk::InstancedVoxel> = (),
@@ -52,7 +53,6 @@ pub struct Overseer {
 impl Overseer {
     pub fn new() -> Self {
         let mut world = world::World::new();
-        //world.chunks = world::chunk::Chunk::stress(5);
         world.load_wrld(PathBuf::from("world/tree.wrld"));
         world.load_chunk([0, 0, 0]);
 
@@ -66,7 +66,8 @@ impl Overseer {
             .with_dimensions(width, height)
             .with_min_dimensions(800, 600)
             .with_vsync();
-        let (window, device, mut factory, main_color, main_depth) = gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
+        let (window, device, mut factory,
+            main_color, main_depth) = gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
         let encoder: gfx::Encoder<_, _> = factory.create_command_buffer().into();
 
         window.set_cursor_state(glutin::CursorState::Grab).unwrap();
@@ -79,7 +80,8 @@ impl Overseer {
             chunk.instances(&mut instances);
         }
 
-        let voxel_buffer = factory.create_buffer_const(&instances, gfx::BufferRole::Vertex, gfx::Bind::empty()).unwrap();
+        let voxel_buffer = factory.create_buffer_const(&instances, gfx::BufferRole::Vertex,
+                                                       gfx::Bind::empty()).unwrap();
 
         let (vertex_buffer, mut slice) = factory.create_vertex_buffer_indexed(&world::chunk::VERTICES, world::chunk::INDICES);
         slice.instances = Some((instances.len() as u32, 0));
@@ -88,6 +90,7 @@ impl Overseer {
         let pso = factory.create_pipeline_simple(vs, fs, gfx::state::CullFace::Back, pipe::new()).unwrap();
 
         let data = pipe::Data {
+            time: 0.0,
             vbuf: vertex_buffer,
             transform: (camera.perspective * camera.view).into(),
             voxels: voxel_buffer,
@@ -112,9 +115,10 @@ impl Overseer {
         }
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self, delta: f32) {
         self.camera.update(&self.window);
 
+        self.bundle.data.time += delta;
         self.bundle.data.transform = (self.camera.perspective * self.camera.view).into();
     }
 

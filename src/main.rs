@@ -70,7 +70,7 @@ fn main() {
             count = 0.0f64;
         }
         
-        overseer.update();
+        overseer.update(dt32);
         overseer.render();
 
         let camera = &mut overseer.camera;

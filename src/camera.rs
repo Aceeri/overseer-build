@@ -20,7 +20,8 @@ impl Camera {
         let (fov, near, far) = (45.0f32, 0.1f32, 100f32);
 
         let (width, height) = window.get_inner_size().unwrap();
-        let aspect = (width as f32 * window.hidpi_factor()) / (height as f32 * window.hidpi_factor());
+        let aspect = (width as f32 * window.hidpi_factor()) / 
+                     (height as f32 * window.hidpi_factor());
 
         Camera {
             view: Matrix4::identity(),
@@ -41,8 +42,12 @@ impl Camera {
         let (sin_roll, cos_roll) = self.roll.sin_cos();
 
         let x_axis = Vector3::new(cos_roll * cos_yaw, sin_roll * cos_yaw, -sin_yaw);
-        let y_axis = Vector3::new(-sin_roll * cos_pitch + sin_pitch * cos_roll * sin_yaw, cos_pitch * cos_roll + sin_roll * sin_pitch * sin_yaw, sin_pitch * cos_yaw);
-        let z_axis = Vector3::new(sin_roll * sin_pitch + cos_pitch * cos_roll * sin_yaw, -sin_pitch * cos_roll + sin_roll * cos_pitch * sin_yaw, cos_pitch * cos_yaw);
+        let y_axis = Vector3::new(-sin_roll * cos_pitch + sin_pitch * cos_roll * sin_yaw, 
+                                  cos_pitch * cos_roll + sin_roll * sin_pitch * sin_yaw, 
+                                  sin_pitch * cos_yaw);
+        let z_axis = Vector3::new(sin_roll * sin_pitch + cos_pitch * cos_roll * sin_yaw,
+                                  -sin_pitch * cos_roll + sin_roll * cos_pitch * sin_yaw,
+                                  cos_pitch * cos_yaw);
 
         (x_axis, y_axis, z_axis)
     }
@@ -62,7 +67,8 @@ impl Camera {
         );
 
         let (width, height) = window.get_inner_size().unwrap();
-        let aspect = (width as f32 * window.hidpi_factor()) / (height as f32 * window.hidpi_factor());
+        let aspect = (width as f32 * window.hidpi_factor()) /
+                     (height as f32 * window.hidpi_factor());
 
         self.perspective = cgmath::perspective(cgmath::deg(self.fov), aspect, self.near, self.far);
     }
