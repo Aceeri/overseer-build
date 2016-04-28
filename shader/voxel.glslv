@@ -1,21 +1,21 @@
 #version 150 core
 
-in vec4 voxel_color;
-in ivec4 voxel_position;
+in vec4 vox_Color;
+in ivec4 vox_Pos;
 
-in ivec4 vertex_position;
-in ivec4 vertex_normal;
+in ivec4 vert_Pos;
+in ivec4 vert_Normal;
 
-out vec3 v_position;
-out vec3 v_normal;
-out vec4 v_color;
+out vec3 v_Position;
+out vec3 v_Normal;
+out vec4 v_Color;
 
-uniform mat4 camera_transform;
+uniform mat4 c_Transform;
 
 void main() {
-	gl_Position = camera_transform * (vertex_position + 2 * voxel_position);
+	gl_Position = c_Transform * (vert_Pos + 2 * vox_Pos);
 
-	v_color = voxel_color;
-	v_normal = vec3(vertex_normal);
-	v_position = vec3(vertex_position + 2 * voxel_position);
+	v_Color = vox_Color;
+	v_Normal = vec3(vert_Normal);
+	v_Position = vec3(vert_Pos + 2 * vox_Pos);
 }

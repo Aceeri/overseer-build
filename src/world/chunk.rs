@@ -48,9 +48,9 @@ pub static INDICES: &'static [u16] = &[
     20, 21, 22, 22, 23, 20, // back
 ];
 
-gfx_vertex_struct!(InstancedVoxel {
-    position: [i32; 4] = "voxel_position",
-    color: [f32; 4] = "voxel_color",
+gfx_vertex_struct!( InstancedVoxel {
+    position: [i32; 4] = "vox_Pos",
+    color: [f32; 4] = "vox_Color",
 });
 
 #[derive(Copy, Clone)]

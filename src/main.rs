@@ -26,13 +26,10 @@ fn main() {
     let mut now = PreciseTime::now();
 
     let mut count = 0.0f64;
-
     let mut average = VecDeque::new();
 
     let mut focused = true;
-
     let mut prev_mouse = (0, 0);
-
     let mut locked = false;
 
     'main: loop {
@@ -59,7 +56,7 @@ fn main() {
 
         count += dt64;
 
-        if count > 1.0f64 {
+        if count > 2.5f64 {
             let mut av = 0.0;
             for point in &average {
                 av += point.clone();

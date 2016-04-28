@@ -17,6 +17,8 @@ use std::path::PathBuf;
 use gfx::traits::{Factory, FactoryExt};
 use gfx::Device;
 
+use cgmath::{Matrix4};
+
 pub type ColorFormat = gfx::format::Rgba8;
 pub type DepthFormat = gfx::format::DepthStencil;
 
@@ -26,16 +28,23 @@ pub mod camera;
 use camera::Camera;
 
 gfx_vertex_struct!( Vertex {
-    pos: [i8; 4] = "vertex_position",
-    normal: [i8; 4] = "vertex_normal",
+    pos: [i8; 4] = "vert_Pos",
+    normal: [i8; 4] = "vert_Normal",
+});
+
+gfx_constant_struct!( LightParam {
+    pos: [f32; 4] = "pos",
+    color: [f32; 4] = "color",
+    proj: [[f32; 4]; 4] = "proj",
 });
 
 gfx_pipeline!( pipe {
-    time: gfx::Global<f32> = "time",
+    time: gfx::Global<f32> = "Time",
     vbuf: gfx::VertexBuffer<Vertex> = (),
-    transform: gfx::Global<[[f32; 4]; 4]> = "camera_transform",
+    transform: gfx::Global<[[f32; 4]; 4]> = "c_Transform",
     voxels: gfx::InstanceBuffer<world::chunk::InstancedVoxel> = (),
-    out_color: gfx::RenderTarget<ColorFormat> = "fragment",
+    lights: gfx::ConstantBuffer<LightParam> = "b_Lights",
+    out_color: gfx::RenderTarget<ColorFormat> = "Target0",
     out_depth: gfx::DepthTarget<DepthFormat> =
         gfx::preset::depth::LESS_EQUAL_WRITE,
 });
@@ -70,9 +79,6 @@ impl Overseer {
             main_color, main_depth) = gfx_window_glutin::init::<ColorFormat, DepthFormat>(builder);
         let encoder: gfx::Encoder<_, _> = factory.create_command_buffer().into();
 
-        window.set_cursor_state(glutin::CursorState::Grab).unwrap();
-        window.set_cursor_position(width as i32 / 2, height as i32 / 2).unwrap();
-
         let camera = Camera::new(&window);
 
         let mut instances = Vec::new();
@@ -89,11 +95,59 @@ impl Overseer {
 
         let pso = factory.create_pipeline_simple(vs, fs, gfx::state::CullFace::Back, pipe::new()).unwrap();
 
+        let pos = [25.0, 4.0, 22.0, 1.0];
+        let pos2 = [-2.0, 15.0, -2.0, 1.0];
+
+        let light_params = vec![LightParam {
+            pos: pos,
+            color: [ 1.0, 1.0, 1.0, 1.0],
+            proj: {
+                let mx_proj: Matrix4<_> = 
+                    cgmath::PerspectiveFov {
+                        fovy: cgmath::deg(60f32).into(),
+                        aspect: 1.0,
+                        near: 1f32,
+                        far: 20f32,
+                    }.to_perspective().into();
+
+                let mx_view = cgmath::Matrix4::look_at(
+                        cgmath::Point3::new(pos[0], pos[1], pos[2]),
+                        cgmath::Point3::new(0.0, 0.0, 0.0),
+                        cgmath::Vector3::unit_z(),
+                    );
+
+                (mx_view * mx_proj).into()
+            },
+        }, LightParam {
+            pos: pos2,
+            color: [ 1.0, 1.0, 1.0, 1.0],
+            proj: {
+                let mx_proj: Matrix4<_> = 
+                    cgmath::PerspectiveFov {
+                        fovy: cgmath::deg(60f32).into(),
+                        aspect: 1.0,
+                        near: 1f32,
+                        far: 20f32,
+                    }.to_perspective().into();
+
+                let mx_view = cgmath::Matrix4::look_at(
+                        cgmath::Point3::new(pos2[0], pos2[1], pos2[2]),
+                        cgmath::Point3::new(0.0, 0.0, 0.0),
+                        cgmath::Vector3::unit_z(),
+                    );
+
+                (mx_view * mx_proj).into()
+            },
+        }];
+
+        let light_buf = factory.create_buffer_const(&light_params, gfx::BufferRole::Uniform, gfx::Bind::empty()).unwrap();
+
         let data = pipe::Data {
             time: 0.0,
             vbuf: vertex_buffer,
             transform: (camera.perspective * camera.view).into(),
             voxels: voxel_buffer,
+            lights: light_buf,
             out_color: main_color,
             out_depth: main_depth,
         };
