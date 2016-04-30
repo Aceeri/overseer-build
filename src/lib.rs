@@ -11,6 +11,7 @@ extern crate num_traits;
 extern crate time;
 extern crate regex;
 extern crate rand;
+extern crate bit_set;
 
 use std::path::PathBuf;
 
@@ -54,7 +55,7 @@ pub struct Overseer {
     pub device: gfx_device_gl::Device,
     pub factory: gfx_device_gl::Factory,
     pub encoder: gfx::Encoder<gfx_device_gl::Resources, gfx_device_gl::CommandBuffer>,
-    pub bundle: pipe::Bundle<gfx_device_gl::Resources>,
+    pub bundle: gfx::Bundle<gfx_device_gl::Resources, pipe::Data<gfx_device_gl::Resources>>,
     pub camera: self::camera::Camera,
     pub world: world::World,
 }
@@ -64,6 +65,9 @@ impl Overseer {
         let mut world = world::World::new();
         world.load_wrld(PathBuf::from("world/tree.wrld"));
         world.load_chunk([0, 0, 0]);
+        world.load_chunk([-1, 0, 0]);
+        world.load_chunk([0, 0, -1]);
+        world.load_chunk([-1, 0, -1]);
 
         let vs = include_bytes!("../shader/voxel.glslv");
         let fs = include_bytes!("../shader/voxel.glslf");
@@ -86,17 +90,26 @@ impl Overseer {
             chunk.instances(&mut instances);
         }
 
-        let voxel_buffer = factory.create_buffer_const(&instances, gfx::BufferRole::Vertex,
-                                                       gfx::Bind::empty()).unwrap();
+        let voxel_buffer = factory.create_buffer_const(&instances, gfx::BufferRole::Vertex, gfx::Bind::empty()).unwrap();
 
-        let (vertex_buffer, mut slice) = factory.create_vertex_buffer_indexed(&world::chunk::VERTICES, world::chunk::INDICES);
+        let (vertex_buffer, mut slice) = factory.create_vertex_buffer_with_slice(&world::chunk::VERTICES, world::chunk::INDICES);
         slice.instances = Some((instances.len() as u32, 0));
         println!("Voxels: {:?}", instances.len());
 
-        let pso = factory.create_pipeline_simple(vs, fs, gfx::state::CullFace::Back, pipe::new()).unwrap();
+        let raster = gfx::state::Rasterizer {
+            front_face: gfx::state::FrontFace::CounterClockwise,
+            cull_face: gfx::state::CullFace::Nothing,
+            method: gfx::state::RasterMethod::Line(3),
+            offset: None,
+            samples: None,
+        };
+
+        let shader_set = factory.create_shader_set(vs, fs).unwrap();
+
+        let pso = factory.create_pipeline_state(&shader_set, gfx::Primitive::TriangleList, raster, pipe::new()).unwrap();
 
         let pos = [25.0, 4.0, 22.0, 1.0];
-        let pos2 = [-2.0, 15.0, -2.0, 1.0];
+        let pos2 = [25.0, 15.0, 22.0, 1.0];
 
         let light_params = vec![LightParam {
             pos: pos,
@@ -152,7 +165,7 @@ impl Overseer {
             out_depth: main_depth,
         };
 
-        let bundle = pipe::Bundle {
+        let bundle = gfx::Bundle {
             slice: slice,
             pso: pso, 
             data: data,

@@ -21,27 +21,10 @@ uniform b_Lights {
 };
 
 void main() {
-	/*vec3 sun = vec3(cos(Time), sin(Time), cos(Time));
-
-	vec3 normal = normalize(v_Normal);
-	vec3 light_dir = normalize(light_pos - v_Position);
-
-	float lambertian = max(dot(light_dir,normal), 0.0) * light_brightness;
-	float sun_lambertian = max(dot(sun,normal), 0.0);
-
-	float total = (lambertian + sun_lambertian);
-
-	if (total > 0.05) {
-		Target0 = total * v_Color;
-	} else {
-		Target0 = v_Color * 0.05;
-	}*/
-
 	vec3 normal = normalize(v_Normal);
 	vec3 ambient = vec3(0.05, 0.05, 0.05);
 
 	float brightness = 0.05;
-	//vec3 color = vec3(0.0, 0.0, 0.0);
 	for (int i = 0; i < MAX_LIGHTS; i++) { 
 		Light light = u_Lights[i];
 
@@ -51,7 +34,6 @@ void main() {
 		float diffuse = max(0.0, dot(normal, light_dir));
 
 		brightness += diffuse * light.color.w;
-		//color += light.color.xyz * diffuse * light.color.w;
 	}
 
 	Target0 = brightness * v_Color;

@@ -4,6 +4,8 @@ use std::path::Path;
 use std::fs::File;
 use std::io::{Read, BufReader, Write, Seek, SeekFrom};
 
+use bit_set::BitSet;
+
 use super::super::Vertex;
 
 pub static VERTICES: [Vertex; 24] = [
@@ -81,9 +83,6 @@ impl Chunk {
     pub fn from(file: &Path, position: [i32; 3], location: u64) -> Option<Chunk> {
         let mut file = File::open(file).unwrap();
         file.seek(SeekFrom::Start(location));
-
-        //let mut reader = BufReader::new(file);
-        //reader.seek(SeekFrom::Start(location));
 
         let mut expr = "".to_owned();
         let (mut x, mut y, mut z) = (0, 0, 0);

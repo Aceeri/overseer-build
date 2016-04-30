@@ -78,7 +78,7 @@ fn main() {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) |
                 Event::Closed => break 'main,
 
-                Event::MouseMoved((x, y)) => {
+                Event::MouseMoved(x, y) => {
                     if let Some((width, height)) = overseer.window.get_inner_size() {
                         if x == width as i32 / 2 && y == height as i32 / 2 {
                             reset = true;
