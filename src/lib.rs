@@ -29,7 +29,7 @@ pub mod camera;
 use camera::Camera;
 
 gfx_vertex_struct!( Vertex {
-    pos: [i8; 4] = "vert_Pos",
+    pos: [f32; 4] = "vert_Pos",
     normal: [i8; 4] = "vert_Normal",
 });
 
@@ -63,11 +63,12 @@ pub struct Overseer {
 impl Overseer {
     pub fn new() -> Self {
         let mut world = world::World::new();
-        world.load_wrld(PathBuf::from("world/tree.wrld"));
-        world.load_chunk([0, 0, 0]);
-        world.load_chunk([-1, 0, 0]);
-        world.load_chunk([0, 0, -1]);
-        world.load_chunk([-1, 0, -1]);
+        world.load_wrld(PathBuf::from("world/wall.wrld"));
+        for x in -2..2 {
+            for z in -2..2 {
+                world.load_chunk([x, 0, z]);
+            }
+        }
 
         let vs = include_bytes!("../shader/voxel.glslv");
         let fs = include_bytes!("../shader/voxel.glslf");
@@ -99,7 +100,8 @@ impl Overseer {
         let raster = gfx::state::Rasterizer {
             front_face: gfx::state::FrontFace::CounterClockwise,
             cull_face: gfx::state::CullFace::Nothing,
-            method: gfx::state::RasterMethod::Line(3),
+            //method: gfx::state::RasterMethod::Line(3),
+            method: gfx::state::RasterMethod::Fill,
             offset: None,
             samples: None,
         };

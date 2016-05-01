@@ -10,36 +10,47 @@ use super::super::Vertex;
 
 pub static VERTICES: [Vertex; 24] = [
     // top (0, 0, 1)
-    Vertex { pos: [-1, -1,  1,  1], normal: [0, 0, 1, 1], },
-    Vertex { pos: [ 1, -1,  1,  1], normal: [0, 0, 1, 1], },
-    Vertex { pos: [ 1,  1,  1,  1], normal: [0, 0, 1, 1], },
-    Vertex { pos: [-1,  1,  1,  1], normal: [0, 0, 1, 1], },
+    Vertex { pos: [-0.5, -0.5,  0.5,  0.5], normal: [0, 0, 1, 1], },
+    Vertex { pos: [ 0.5, -0.5,  0.5,  0.5], normal: [0, 0, 1, 1], },
+    Vertex { pos: [ 0.5,  0.5,  0.5,  0.5], normal: [0, 0, 1, 1], },
+    Vertex { pos: [-0.5,  0.5,  0.5,  0.5], normal: [0, 0, 1, 1], },
     // bottom (0, 0, -1)
-    Vertex { pos: [-1,  1, -1,  1], normal: [0, 0, -1, 1], },
-    Vertex { pos: [ 1,  1, -1,  1], normal: [0, 0, -1, 1], },
-    Vertex { pos: [ 1, -1, -1,  1], normal: [0, 0, -1, 1], },
-    Vertex { pos: [-1, -1, -1,  1], normal: [0, 0, -1, 1], },
+    Vertex { pos: [-0.5,  0.5, -0.5,  0.5], normal: [0, 0, -1, 1], },
+    Vertex { pos: [ 0.5,  0.5, -0.5,  0.5], normal: [0, 0, -1, 1], },
+    Vertex { pos: [ 0.5, -0.5, -0.5,  0.5], normal: [0, 0, -1, 1], },
+    Vertex { pos: [-0.5, -0.5, -0.5,  0.5], normal: [0, 0, -1, 1], },
     // right (1, 0, 0)
-    Vertex { pos: [ 1, -1, -1,  1], normal: [1, 0, 0, 1], },
-    Vertex { pos: [ 1,  1, -1,  1], normal: [1, 0, 0, 1], },
-    Vertex { pos: [ 1,  1,  1,  1], normal: [1, 0, 0, 1], },
-    Vertex { pos: [ 1, -1,  1,  1], normal: [1, 0, 0, 1], },
+    Vertex { pos: [ 0.5, -0.5, -0.5,  0.5], normal: [1, 0, 0, 1], },
+    Vertex { pos: [ 0.5,  0.5, -0.5,  0.5], normal: [1, 0, 0, 1], },
+    Vertex { pos: [ 0.5,  0.5,  0.5,  0.5], normal: [1, 0, 0, 1], },
+    Vertex { pos: [ 0.5, -0.5,  0.5,  0.5], normal: [1, 0, 0, 1], },
     // left (-1, 0, 0)
-    Vertex { pos: [-1, -1,  1,  1], normal: [-1, 0, 0, 1], },
-    Vertex { pos: [-1,  1,  1,  1], normal: [-1, 0, 0, 1], },
-    Vertex { pos: [-1,  1, -1,  1], normal: [-1, 0, 0, 1], },
-    Vertex { pos: [-1, -1, -1,  1], normal: [-1, 0, 0, 1], },
+    Vertex { pos: [-0.5, -0.5,  0.5,  0.5], normal: [-1, 0, 0, 1], },
+    Vertex { pos: [-0.5,  0.5,  0.5,  0.5], normal: [-1, 0, 0, 1], },
+    Vertex { pos: [-0.5,  0.5, -0.5,  0.5], normal: [-1, 0, 0, 1], },
+    Vertex { pos: [-0.5, -0.5, -0.5,  0.5], normal: [-1, 0, 0, 1], },
     // front (0, 1, 0)
-    Vertex { pos: [ 1,  1, -1,  1], normal: [0, 1, 0, 1], },
-    Vertex { pos: [-1,  1, -1,  1], normal: [0, 1, 0, 1], },
-    Vertex { pos: [-1,  1,  1,  1], normal: [0, 1, 0, 1], },
-    Vertex { pos: [ 1,  1,  1,  1], normal: [0, 1, 0, 1], },
+    Vertex { pos: [ 0.5,  0.5, -0.5,  0.5], normal: [0, 1, 0, 1], },
+    Vertex { pos: [-0.5,  0.5, -0.5,  0.5], normal: [0, 1, 0, 1], },
+    Vertex { pos: [-0.5,  0.5,  0.5,  0.5], normal: [0, 1, 0, 1], },
+    Vertex { pos: [ 0.5,  0.5,  0.5,  0.5], normal: [0, 1, 0, 1], },
     // back (0, -1, 0)
-    Vertex { pos: [ 1, -1,  1,  1], normal: [0, -1, 0, 1], },
-    Vertex { pos: [-1, -1,  1,  1], normal: [0, -1, 0, 1], },
-    Vertex { pos: [-1, -1, -1,  1], normal: [0, -1, 0, 1], },
-    Vertex { pos: [ 1, -1, -1,  1], normal: [0, -1, 0, 1], },
+    Vertex { pos: [ 0.5, -0.5,  0.5,  0.5], normal: [0, -1, 0, 1], },
+    Vertex { pos: [-0.5, -0.5,  0.5,  0.5], normal: [0, -1, 0, 1], },
+    Vertex { pos: [-0.5, -0.5, -0.5,  0.5], normal: [0, -1, 0, 1], },
+    Vertex { pos: [ 0.5, -0.5, -0.5,  0.5], normal: [0, -1, 0, 1], },
 ];
+
+/*pub static VERTICES: [Vertex; 8] = [
+    Vertex { pos: [-1, -1, -1, 1] } // 0
+    Vertex { pos: [-1, -1,  1, 1] } // 1
+    Vertex { pos: [-1,  1,  1, 1] } // 2
+    Vertex { pos: [-1,  1, -1, 1] } // 3
+    Vertex { pos: [ 1,  1, -1, 1] } // 4
+    Vertex { pos: [ 1,  1,  1, 1] } // 5
+    Vertex { pos: [ 1, -1,  1, 1] } // 6
+    Vertex { pos: [ 1, -1, -1, 1] } // 7
+];*/
 
 pub static INDICES: &'static [u16] = &[
      0,  1,  2,  2,  3,  0, // top
@@ -49,6 +60,21 @@ pub static INDICES: &'static [u16] = &[
     16, 17, 18, 18, 19, 16, // front
     20, 21, 22, 22, 23, 20, // back
 ];
+
+/*pub static INDICES: &'static [u16] = &[
+    0, 1, 2, // front
+    0, 2, 3,
+    4, 5, 6, // back
+    4, 6, 7,
+    7, 6, 1, // left
+    7, 1, 0,
+    3, 2, 5, // right
+    3, 5, 4,
+    1, 2, 5, // top
+    1, 5, 6,
+    0, 3, 4, // bottom
+    0, 4, 7,
+];*/
 
 gfx_vertex_struct!( InstancedVoxel {
     position: [i32; 4] = "vox_Pos",
@@ -239,8 +265,8 @@ impl Chunk {
                     if z.id != 0 {
                         let mut color = match z.id {
                             1 => [0.02, 0.55, 0.0, 1.0],
-                            2 => [0.43, 0.35, 0.286, 1.0],
-                            3 => [0.11, 0.385, 0.102, 1.0],
+                            2 => [0.2, 0.2, 0.2, 1.0],
+                            3 => [0.4, 0.4, 0.4, 1.0],
                             _ => [0.00, 0.00, 0.00, 0.00],
                         };
                         list.push(InstancedVoxel {
