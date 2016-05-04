@@ -89,18 +89,18 @@ impl World {
 
     pub fn load_chunk(&mut self, position: [i32; 3]) {
         if let Some(location) = self.map.get(&position) {
-            println!("Chunk {:?} found at {:?}", position, location);
+            //println!("Chunk {:?} found at {:?}", position, location);
 
             match Chunk::from(&self.wrld_file, position, location.clone()) {
                 Some(chunk) => self.chunks.push(chunk),
                 None => { },
             }
         } else {
-            println!("No chunk found at location: {:?}", position);
+            //println!("No chunk found at location: {:?}", position);
         }
     }
 
-    fn unload_chunk(&mut self, index: usize) {
+    pub fn unload_chunk(&mut self, index: usize) {
         self.chunks.remove(index);
     }
 }

@@ -4,6 +4,11 @@ use std::path::Path;
 use std::fs::File;
 use std::io::{Read, BufReader, Write, Seek, SeekFrom};
 
+use camera::Camera;
+
+use cgmath::Point3;
+use collision::{Ray3, Aabb3, Intersect};
+
 use bit_set::BitSet;
 
 use super::super::Vertex;
@@ -95,7 +100,7 @@ impl fmt::Debug for Voxel {
 #[derive(Copy, Clone, Debug)]
 pub struct Chunk {
     position: [i32; 3],
-    data: [[[Voxel; 16]; 16]; 16], // 16x16x16 array of voxels
+    pub data: [[[Voxel; 16]; 16]; 16], // 16x16x16 array of voxels
 }
 
 impl Chunk {
@@ -118,7 +123,7 @@ impl Chunk {
         'parse: for found in file.chars() {
             match found {
                 Ok(character) => {
-                    
+
                     match character {
                         // ignore
                         '\n' | '\r' | '\t' => continue,
@@ -253,8 +258,8 @@ impl Chunk {
                 }
             }
         }
-        
-        list 
+
+        list
     }
 
     pub fn instances(&self, list: &mut Vec<InstancedVoxel>) {
@@ -271,8 +276,8 @@ impl Chunk {
                         };
                         list.push(InstancedVoxel {
                             position: [
-                                self.position[0] * 16 + x_pos as i32, 
-                                self.position[1] * 16 + y_pos as i32, 
+                                self.position[0] * 16 + x_pos as i32,
+                                self.position[1] * 16 + y_pos as i32,
                                 self.position[2] * 16 + z_pos as i32, 1],
                             color: color,
                         });
@@ -280,5 +285,28 @@ impl Chunk {
                 }
             }
         }
+    }
+
+    pub fn raycast_voxel(&mut self, camera: &Camera, x: usize, y: usize, z: usize) -> bool {
+        let origin = Point3::new(camera.position.x, camera.position.y, camera.position.z);
+        let ray = Ray3::<f32>::new(origin, -camera.axis().2);
+
+        let chunk = Point3::new(16.0 * self.position[0] as f32,
+                                16.0 * self.position[1] as f32,
+                                16.0 * self.position[2] as f32);
+
+        let min = Point3::new(chunk.x + x as f32 - 0.5, chunk.y + y as f32 - 0.5, chunk.z + z as f32 - 0.5) * 0.5;
+        let max = Point3::new(chunk.x + x as f32 + 0.5, chunk.y + y as f32 + 0.5, chunk.z + z as f32 + 0.5) * 0.5;
+        let aabb = Aabb3::new(min, max);
+
+        let ray_aabb = (ray, aabb);
+
+        if let Some(_) = ray_aabb.intersection() {
+            self.data[y][x][z] = Voxel { id: 3 };
+        } else {
+            self.data[y][x][z] = Voxel { id: 1 };
+        }
+
+        true
     }
 }

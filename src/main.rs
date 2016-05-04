@@ -29,9 +29,9 @@ fn main() {
     let mut average = VecDeque::new();
 
     let mut focused = true;
+    let (mut width, mut height) = (1600, 900);
     let mut prev_mouse = (0, 0);
     let mut mouse = (0, 0);
-    let (mut width, mut height) = (1600, 900);
     let mut locked = false;
 
     'main: loop {
@@ -84,8 +84,11 @@ fn main() {
             overseer.window.set_cursor_state(glutin::CursorState::Normal).unwrap();
         }
 
+        overseer.world.chunks[0].raycast_voxel(&overseer.camera, 0, 0, 0);
+
         overseer.update(dt32);
         overseer.render();
+
 
         let camera = &mut overseer.camera;
         let mut reset = false;
@@ -136,7 +139,7 @@ fn main() {
                     }
                 },
 
-                _ => {},
+                _ => { },
             }
         }
 
@@ -147,11 +150,13 @@ fn main() {
             camera.yaw += dx as f32 / 500.0f32;
             camera.pitch += dy as f32 / 500.0f32;
 
+            let clamp = 1.48;
+
             // clamps y axis rotation to 85 degrees
-            if camera.pitch > 1.48 {
-                camera.pitch = 1.48;
-            } else if camera.pitch < -1.48 {
-                camera.pitch = -1.48;
+            if camera.pitch > clamp {
+                camera.pitch = clamp;
+            } else if camera.pitch < -clamp {
+                camera.pitch = -clamp;
             }
 
             prev_mouse = mouse;

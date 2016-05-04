@@ -67,9 +67,11 @@ impl Overseer {
         world.load_wrld(PathBuf::from("world/wall.wrld"));
         for x in -2..2 {
             for z in -2..2 {
-                world.load_chunk([x, 0, z]);
+                //world.load_chunk([x, 0, z]);
             }
         }
+
+        world.load_chunk([0, 0, 0]);
 
         let vs = include_bytes!("../shader/voxel.glslv");
         let fs = include_bytes!("../shader/voxel.glslf");
@@ -92,7 +94,7 @@ impl Overseer {
             chunk.instances(&mut instances);
         }
 
-        let voxel_buffer = factory.create_buffer_const(&instances, gfx::BufferRole::Vertex, gfx::Bind::empty()).unwrap();
+        let voxel_buffer = factory.create_buffer_dynamic(512, gfx::BufferRole::Vertex, gfx::Bind::empty()).unwrap();
 
         let (vertex_buffer, mut slice) = factory.create_vertex_buffer_with_slice(&world::chunk::VERTICES, world::chunk::INDICES);
         slice.instances = Some((instances.len() as u32, 0));
@@ -187,6 +189,13 @@ impl Overseer {
 
     pub fn update(&mut self, delta: f32) {
         self.camera.update(&self.window);
+
+        let mut instances = Vec::new();
+        for chunk in self.world.chunks.iter() {
+            chunk.instances(&mut instances);
+        }
+
+        self.encoder.update_buffer(&self.bundle.data.voxels, instances.as_slice(), 0);
 
         self.bundle.data.time += delta;
         self.bundle.data.transform = (self.camera.perspective * self.camera.view).into();
