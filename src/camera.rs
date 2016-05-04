@@ -29,9 +29,9 @@ impl Camera {
             fov: fov,
             near: near,
             far: far,
-            position: Vector3::new(0.0, 0.0, -5.0),
+            position: Vector3::new(-5.0, 0.0, -5.0),
             pitch: 0.0f32,
-            yaw: 0.0f32,
+            yaw: 4.0f32,
             roll: 0.0f32,
         }
     }
@@ -71,5 +71,7 @@ impl Camera {
                      (height as f32 * window.hidpi_factor());
 
         self.perspective = cgmath::perspective(cgmath::deg(self.fov), aspect, self.near, self.far);
+
+        println!("yaw: {:?}, pitch: {:?}", self.yaw, self.pitch);
     }
 }

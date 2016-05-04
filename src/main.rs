@@ -32,6 +32,8 @@ fn main() {
     let (mut width, mut height) = (1600, 900);
     let mut prev_mouse = (0, 0);
     let mut mouse = (0, 0);
+
+    let mut prev_locked = false;
     let mut locked = false;
 
     'main: loop {
@@ -69,6 +71,7 @@ fn main() {
             count = 0.0f64;
         }
 
+        prev_locked = locked;
         locked = toggle[56];
 
         if locked {
@@ -120,7 +123,7 @@ fn main() {
 
                 Event::Focused(focus) => {
                     if focus {
-                        locked = true;
+
                     } else {
                         locked = false;
 
@@ -141,6 +144,11 @@ fn main() {
 
                 _ => { },
             }
+        }
+
+        if !prev_locked && locked {
+            mouse = (width as i32 / 2, height as i32 / 2);
+            prev_mouse = (width as i32 / 2, height as i32 / 2);
         }
 
         if focused && locked {
