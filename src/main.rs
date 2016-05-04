@@ -30,6 +30,8 @@ fn main() {
 
     let mut focused = true;
     let mut prev_mouse = (0, 0);
+    let mut mouse = (0, 0);
+    let (mut width, mut height) = (1600, 900);
     let mut locked = false;
 
     'main: loop {
@@ -66,40 +68,46 @@ fn main() {
             println!("fps: {:?}", av as u32);
             count = 0.0f64;
         }
-        
+
+        locked = toggle[56];
+
+        if locked {
+            overseer.window.set_cursor_state(glutin::CursorState::Grab).unwrap();
+
+            if let Some((width, height)) = overseer.window.get_inner_size() {
+                match overseer.window.set_cursor_position(width as i32 / 2, height as i32 / 2) {
+                    Ok(_) => prev_mouse = (width as i32 / 2, height as i32 / 2),
+                    Err(e) => println!("SET CURSOR ERROR {:?}", e),
+                }
+            }
+        } else {
+            overseer.window.set_cursor_state(glutin::CursorState::Normal).unwrap();
+        }
+
         overseer.update(dt32);
         overseer.render();
 
         let camera = &mut overseer.camera;
         let mut reset = false;
-        // loop over events
+
         for event in overseer.window.poll_events() {
             match event {
                 Event::KeyboardInput(_, _, Some(VirtualKeyCode::Escape)) |
                 Event::Closed => break 'main,
 
+                Event::Resized(w, h) => {
+                    width = w;
+                    height = h;
+                },
+
                 Event::MouseMoved(x, y) => {
-                    if let Some((width, height)) = overseer.window.get_inner_size() {
-                        if x == width as i32 / 2 && y == height as i32 / 2 {
-                            reset = true;
-                        }
+                    if reset {
+                        mouse = (x, y);
                     }
-
-                    if focused && locked && reset {
-                        let dx = prev_mouse.0 - x;
-                        let dy = prev_mouse.1 - y;
-
-                        camera.yaw += dx as f32 / 500.0f32;
-                        camera.pitch += dy as f32 / 500.0f32;
-
-                        // clamps y axis rotation to 85 degrees
-                        if camera.pitch > 1.48 {
-                            camera.pitch = 1.48;
-                        } else if camera.pitch < -1.48 {
-                            camera.pitch = -1.48;
-                        }
-
-                        prev_mouse = (x, y);
+                    
+                    // check if mouse has been reset to locked position
+                    if x == width as i32 / 2 && y == height as i32 / 2 {
+                        reset = true;
                     }
                 },
 
@@ -128,6 +136,23 @@ fn main() {
             }
         }
 
+        if focused && locked {
+            let dx = prev_mouse.0 - mouse.0;
+            let dy = prev_mouse.1 - mouse.1;
+
+            camera.yaw += dx as f32 / 500.0f32;
+            camera.pitch += dy as f32 / 500.0f32;
+
+            // clamps y axis rotation to 85 degrees
+            if camera.pitch > 1.48 {
+                camera.pitch = 1.48;
+            } else if camera.pitch < -1.48 {
+                camera.pitch = -1.48;
+            }
+
+            prev_mouse = mouse;
+        }
+
         let axis = camera.axis();
 
         if keys[17] { // W
@@ -138,7 +163,7 @@ fn main() {
             camera.position += axis.2 * dt32;
         }
 
-        if keys[30] { // A 
+        if keys[30] { // A
             camera.position -= axis.0 * dt32;
         }
 
@@ -152,23 +177,6 @@ fn main() {
 
         if keys[29] { // Left Control
             camera.position -= axis.1 * dt32;
-        }
-
-        locked = toggle[56];
-
-        if locked {
-            overseer.window.set_cursor_state(glutin::CursorState::Grab).unwrap();
-
-            if let Some((width, height)) = overseer.window.get_inner_size() {
-                if let Err(e) = overseer.window.set_cursor_position(width as i32 / 2, 
-                                                                    height as i32 / 2) {
-                    println!("SET CURSOR ERROR {:?}", e);
-                } else {
-                    prev_mouse = (width as i32 / 2, height as i32 / 2);
-                }
-            }
-        } else {
-            overseer.window.set_cursor_state(glutin::CursorState::Normal).unwrap();
         }
     }
 }

@@ -5,6 +5,7 @@ authors = ["Aceeri <conmcclusk@gmail.com>"]
 
 [dependencies]
 cgmath = "0.9.1"
+collision = { path = "../collision-rs" }
 num-traits = "0.1.32"
 glutin = "0.5.0"
 gfx = "0.11.0"

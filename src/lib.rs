@@ -7,6 +7,7 @@ extern crate gfx_device_gl;
 extern crate glutin;
 
 extern crate cgmath;
+extern crate collision;
 extern crate num_traits;
 extern crate time;
 extern crate regex;
@@ -117,7 +118,7 @@ impl Overseer {
             pos: pos,
             color: [ 1.0, 1.0, 1.0, 1.0],
             proj: {
-                let mx_proj: Matrix4<_> = 
+                let mx_proj: Matrix4<_> =
                     cgmath::PerspectiveFov {
                         fovy: cgmath::deg(60f32).into(),
                         aspect: 1.0,
@@ -137,7 +138,7 @@ impl Overseer {
             pos: pos2,
             color: [ 1.0, 1.0, 1.0, 1.0],
             proj: {
-                let mx_proj: Matrix4<_> = 
+                let mx_proj: Matrix4<_> =
                     cgmath::PerspectiveFov {
                         fovy: cgmath::deg(60f32).into(),
                         aspect: 1.0,
@@ -169,7 +170,7 @@ impl Overseer {
 
         let bundle = gfx::Bundle {
             slice: slice,
-            pso: pso, 
+            pso: pso,
             data: data,
         };
 
