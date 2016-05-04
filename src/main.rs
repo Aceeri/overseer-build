@@ -98,13 +98,17 @@ fn main() {
                 Event::Resized(w, h) => {
                     width = w;
                     height = h;
+
+                    gfx_window_glutin::update_views(&overseer.window,
+                                                    &mut overseer.bundle.data.out_color,
+                                                    &mut overseer.bundle.data.out_depth);
                 },
 
                 Event::MouseMoved(x, y) => {
                     if reset {
                         mouse = (x, y);
                     }
-                    
+
                     // check if mouse has been reset to locked position
                     if x == width as i32 / 2 && y == height as i32 / 2 {
                         reset = true;
